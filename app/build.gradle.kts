@@ -14,6 +14,10 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -55,13 +59,17 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
     
     // Navigation Compose
     implementation("androidx.navigation:navigation-compose:2.7.7")
+
+    // ARCore
+    implementation("com.google.ar:core:1.42.0")
     
-    // Maps Compose
-    implementation("com.google.maps.android:maps-compose:4.3.3")
-    
+    // Osmdroid (OpenStreetMap)
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
+
     // SceneView AR
     implementation("io.github.sceneview:arsceneview:2.0.3")
 
