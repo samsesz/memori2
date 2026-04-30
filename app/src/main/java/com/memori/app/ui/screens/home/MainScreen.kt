@@ -1,86 +1,128 @@
 package com.memori.app.ui.screens.home
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.CompassCalibration
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.memori.app.ui.screens.profile.AchievementsScreen
+import com.memori.app.ui.screens.profile.ProfileScreen
+import com.memori.app.ui.theme.RedPrimary
 
 @Composable
-fun MainScreen(onNavigateToTrailStart: () -> Unit) {
+fun MainScreen(onNavigateToTrailStart: () -> Unit, onLogout: () -> Unit) {
     val bottomNavController = rememberNavController()
     var selectedItem by remember { mutableIntStateOf(0) }
     
-    // Perfil no meio conforme solicitado
-    val items = listOf("Mapa", "Perfil", "Favoritos")
-    val icons = listOf(Icons.Filled.LocationOn, Icons.Filled.Person, Icons.Filled.Favorite)
-    val routes = listOf("map", "profile", "favorites")
+    // Menu ajustado para coincidir com a imagem
+    val items = listOf("Explorar", "Perfil", "Conquistas")
+    val icons = listOf(Icons.Default.CompassCalibration, Icons.Default.Person, Icons.Default.Image)
+    val routes = listOf("map", "profile", "achievements")
 
     Scaffold(
         bottomBar = {
-            // Menu "Cilíndrico" (Cápsula) flutuante
+            // Menu "Cilíndrico" (Cápsula) flutuante conforme a foto
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 24.dp)
+                    .padding(horizontal = 32.dp, vertical = 24.dp)
             ) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(70.dp),
-                    shape = RoundedCornerShape(35.dp),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
-                    shadowElevation = 12.dp,
-                    tonalElevation = 4.dp
+                        .height(80.dp),
+                    shape = RoundedCornerShape(40.dp),
+                    color = Color.White,
+                    shadowElevation = 8.dp
                 ) {
-                    NavigationBar(
-                        containerColor = Color.Transparent,
-                        tonalElevation = 0.dp
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.SpaceAround,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         items.forEachIndexed { index, item ->
-                            NavigationBarItem(
-                                icon = { Icon(icons[index], contentDescription = item) },
-                                label = { Text(item) },
-                                selected = selectedItem == index,
-                                onClick = {
+                            val isSelected = selectedItem == index
+                            
+                            Box(
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(CircleShape)
+                                    .let { 
+                                        if (index == 1 && isSelected) {
+                                            // Destaque do perfil no meio
+                                            it.border(2.dp, RedPrimary, CircleShape).padding(4.dp)
+                                        } else it
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                IconButton(onClick = {
                                     selectedItem = index
                                     bottomNavController.navigate(routes[index]) {
                                         popUpTo(bottomNavController.graph.startDestinationId)
                                         launchSingleTop = true
                                     }
+                                }) {
+                                    if (index == 1) {
+                                        // Ícone de perfil amarelado como na foto
+                                        Box(
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .clip(CircleShape)
+                                                .background(if (isSelected) Color(0xFFFFD54F) else Color.LightGray),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text("😑", fontSize = 20.sp)
+                                        }
+                                    } else {
+                                        Icon(
+                                            icons[index],
+                                            contentDescription = item,
+                                            tint = if (isSelected) RedPrimary else RedPrimary.copy(alpha = 0.4f),
+                                            modifier = Modifier.size(32.dp)
+                                        )
+                                    }
                                 }
-                            )
+                            }
                         }
                     }
                 }
             }
         }
     ) { innerPadding ->
-        // O padding é ignorado aqui para que o mapa preencha a tela toda por baixo do menu
         Box(modifier = Modifier.fillMaxSize()) {
             NavHost(navController = bottomNavController, startDestination = "map") {
                 composable("map") {
-                    HomeMapScreen(onNavigateToTrailStart)
+                    HomeMapScreen(
+                        onNavigateToTrailStart = onNavigateToTrailStart,
+                        onNavigateToProfile = {
+                            selectedItem = 1
+                            bottomNavController.navigate("profile") {
+                                popUpTo(bottomNavController.graph.startDestinationId)
+                                launchSingleTop = true
+                            }
+                        }
+                    )
                 }
                 composable("profile") {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Tela de Perfil")
-                    }
+                    ProfileScreen(onLogout = onLogout)
                 }
-                composable("favorites") {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Favoritos")
-                    }
+                composable("achievements") {
+                    AchievementsScreen()
                 }
             }
         }

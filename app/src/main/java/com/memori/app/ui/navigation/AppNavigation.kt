@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.memori.app.ui.screens.auth.SplashScreen
 import com.memori.app.ui.screens.auth.LoginScreen
+import com.memori.app.ui.screens.auth.RegisterScreen
 
 @Composable
 fun AppNavigation() {
@@ -27,7 +28,21 @@ fun AppNavigation() {
                     }
                 },
                 onNavigateToCadastro = {
-                    // navController.navigate(Screen.Cadastro.route)
+                    navController.navigate(Screen.Cadastro.route)
+                }
+            )
+        }
+        composable(Screen.Cadastro.route) {
+            RegisterScreen(
+                onNavigateToLogin = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Cadastro.route) { inclusive = true }
+                    }
+                },
+                onNavigateToHome = {
+                    navController.navigate(Screen.HomeMap.route) {
+                        popUpTo(Screen.Cadastro.route) { inclusive = true }
+                    }
                 }
             )
         }
@@ -35,6 +50,11 @@ fun AppNavigation() {
             com.memori.app.ui.screens.home.MainScreen(
                 onNavigateToTrailStart = {
                     navController.navigate(Screen.Splash.route + "_trail")
+                },
+                onLogout = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.HomeMap.route) { inclusive = true }
+                    }
                 }
             )
         }
@@ -56,6 +76,11 @@ fun AppNavigation() {
             com.memori.app.ui.screens.trail.PuzzleScreen(
                 onPuzzleCompleted = { time ->
                     navController.navigate("final_story/$time")
+                },
+                onExit = {
+                    navController.navigate(Screen.HomeMap.route) {
+                        popUpTo(Screen.HomeMap.route) { inclusive = true }
+                    }
                 }
             )
         }

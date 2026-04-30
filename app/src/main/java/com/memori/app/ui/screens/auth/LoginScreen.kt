@@ -8,7 +8,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -66,8 +68,20 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
         
-        TextButton(onClick = onNavigateToCadastro) {
-            Text("Não tem uma conta? Cadastre-se!", color = MaterialTheme.colorScheme.primary)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Não tem uma conta? ", color = Color.Gray, fontSize = 14.sp)
+            TextButton(
+                onClick = onNavigateToCadastro,
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Text(
+                    "Cadastre-se!",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    textDecoration = TextDecoration.Underline,
+                    fontSize = 14.sp
+                )
+            }
         }
     }
 }

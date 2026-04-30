@@ -4,7 +4,7 @@
             "outputFile": "com.memori.app-mergeDebugResources-69:/values-v22/values-v22.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\fatec-dsm4\\.gradle\\caches\\transforms-4\\9f4624575e1798b4ab98a8a9a8f7be2c\\transformed\\appcompat-1.6.1\\res\\values-v22\\values-v22.xml",
+                    "source": "C:\\Users\\Usuário\\.gradle\\caches\\transforms-4\\9f4624575e1798b4ab98a8a9a8f7be2c\\transformed\\appcompat-1.6.1\\res\\values-v22\\values-v22.xml",
                     "from": {
                         "startLines": "2,3,4,9",
                         "startColumns": "4,4,4,4",
