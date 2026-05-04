@@ -51,7 +51,6 @@ fun HomeMapScreen(onNavigateToTrailStart: () -> Unit, onNavigateToProfile: () ->
     val mapView = remember { MapView(context) }
     var showTrailDialog by remember { mutableStateOf(false) }
 
-    // Initialization
     LaunchedEffect(Unit) {
         Configuration.getInstance().load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
         Configuration.getInstance().userAgentValue = context.packageName
@@ -62,7 +61,6 @@ fun HomeMapScreen(onNavigateToTrailStart: () -> Unit, onNavigateToProfile: () ->
         mapView.controller.setCenter(kkkkLocation)
     }
 
-    // Permission handling
     var hasLocationPermission by remember {
         mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
     }
@@ -75,7 +73,6 @@ fun HomeMapScreen(onNavigateToTrailStart: () -> Unit, onNavigateToProfile: () ->
         }
     }
 
-    // Lifecycle sync
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
@@ -94,13 +91,10 @@ fun HomeMapScreen(onNavigateToTrailStart: () -> Unit, onNavigateToProfile: () ->
             modifier = Modifier.fillMaxSize(),
             update = { view ->
                 view.overlays.clear()
-                
-                // User Location Overlay
                 val locationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(context), view)
                 locationOverlay.enableMyLocation()
                 view.overlays.add(locationOverlay)
 
-                // Trail Marker on the Map
                 val marker = Marker(view)
                 marker.position = kkkkLocation
                 marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
@@ -112,13 +106,11 @@ fun HomeMapScreen(onNavigateToTrailStart: () -> Unit, onNavigateToProfile: () ->
             }
         )
 
-        // FIXED HUD BUTTONS (Fiel ao design solicitado)
-        
-        // Origami Button (Fixed on screen top right area) - MOVED DOWN
+        // Origami Button (Fixed on screen HUD) - MOVED DOWN
         Surface(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = 100.dp, end = 24.dp) // De 80.dp para 100.dp
+                .padding(top = 180.dp, end = 24.dp) // De 140.dp para 180.dp
                 .size(56.dp)
                 .clickable { showTrailDialog = true },
             shape = CircleShape,
@@ -131,7 +123,7 @@ fun HomeMapScreen(onNavigateToTrailStart: () -> Unit, onNavigateToProfile: () ->
             }
         }
 
-        // FAB: Profile (Bottom Center-Right)
+        // FAB: Profile
         FloatingActionButton(
             onClick = onNavigateToProfile,
             modifier = Modifier
@@ -152,13 +144,13 @@ fun HomeMapScreen(onNavigateToTrailStart: () -> Unit, onNavigateToProfile: () ->
             }
         }
 
-        // FAB: My Location (Top End, but below header) - MOVED DOWN
+        // FAB: My Location - MOVED DOWN
         FloatingActionButton(
             onClick = {
                 val overlay = mapView.overlays.filterIsInstance<MyLocationNewOverlay>().firstOrNull()
                 overlay?.myLocation?.let { mapView.controller.animateTo(it) }
             },
-            modifier = Modifier.align(Alignment.TopEnd).padding(top = 180.dp, end = 16.dp), // De 160.dp para 180.dp
+            modifier = Modifier.align(Alignment.TopEnd).padding(top = 260.dp, end = 16.dp), // De 220.dp para 260.dp
             containerColor = Color.White,
             elevation = FloatingActionButtonDefaults.elevation(4.dp),
             shape = CircleShape
@@ -170,11 +162,10 @@ fun HomeMapScreen(onNavigateToTrailStart: () -> Unit, onNavigateToProfile: () ->
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 32.dp, start = 16.dp, end = 16.dp) // Lowered slightly
+                .padding(top = 32.dp, start = 16.dp, end = 16.dp)
                 .align(Alignment.TopCenter),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Larissa Tag
             Surface(shape = RoundedCornerShape(20.dp), color = Color.White, border = BorderStroke(1.dp, RedPrimary), shadowElevation = 4.dp) {
                 Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(modifier = Modifier.size(20.dp).background(Color(0xFFFFD54F), CircleShape))
@@ -182,7 +173,6 @@ fun HomeMapScreen(onNavigateToTrailStart: () -> Unit, onNavigateToProfile: () ->
                     Text(text = "Larissa", color = RedPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 }
             }
-            // Stars Tag
             Surface(shape = RoundedCornerShape(20.dp), color = Color.White, border = BorderStroke(1.dp, RedPrimary), shadowElevation = 4.dp) {
                 Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("10", fontWeight = FontWeight.Bold, color = Color.Gray); Spacer(Modifier.width(4.dp))
@@ -191,49 +181,21 @@ fun HomeMapScreen(onNavigateToTrailStart: () -> Unit, onNavigateToProfile: () ->
             }
         }
 
-        // Trail Start Dialog
         if (showTrailDialog) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.4f))
-                    .clickable { showTrailDialog = false },
-                contentAlignment = Alignment.Center
-            ) {
-                Card(
-                    modifier = Modifier.width(320.dp).padding(16.dp).clickable(enabled = false) {},
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(16.dp)
-                ) {
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)).clickable { showTrailDialog = false }, contentAlignment = Alignment.Center) {
+                Card(modifier = Modifier.width(320.dp).padding(16.dp).clickable(enabled = false) {}, shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(16.dp)) {
                     Column(modifier = Modifier.padding(bottom = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                            Row(modifier = Modifier.align(Alignment.Center), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                repeat(3) { Icon(Icons.Default.StarOutline, null, tint = Color(0xFFFFD54F), modifier = Modifier.size(32.dp)) }
-                            }
-                            Surface(modifier = Modifier.align(Alignment.TopEnd).offset(x = 10.dp, y = (-10).dp), color = Color(0xFF8BC34A), shape = RoundedCornerShape(bottomStart = 8.dp, topEnd = 8.dp)) {
-                                Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(Icons.Default.TrendingUp, null, tint = Color.White, modifier = Modifier.size(20.dp))
-                                    Icon(Icons.Default.Star, null, tint = Color.White, modifier = Modifier.size(16.dp))
-                                }
-                            }
+                            Row(modifier = Modifier.align(Alignment.Center), horizontalArrangement = Arrangement.spacedBy(4.dp)) { repeat(3) { Icon(Icons.Default.StarOutline, null, tint = Color(0xFFFFD54F), modifier = Modifier.size(32.dp)) } }
+                            Surface(modifier = Modifier.align(Alignment.TopEnd).offset(x = 10.dp, y = (-10).dp), color = Color(0xFF8BC34A), shape = RoundedCornerShape(bottomStart = 8.dp, topEnd = 8.dp)) { Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.TrendingUp, null, tint = Color.White, modifier = Modifier.size(20.dp)); Icon(Icons.Default.Star, null, tint = Color.White, modifier = Modifier.size(16.dp)) } }
                         }
                         Text(text = "Lanternas Brilhantes", color = Color.Gray, fontSize = 20.sp, fontWeight = FontWeight.Medium)
                         Spacer(modifier = Modifier.height(16.dp))
-                        Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-                             Text("🏮", fontSize = 100.sp, modifier = Modifier.alpha(0.3f))
-                        }
+                        Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) { Text("🏮", fontSize = 100.sp, modifier = Modifier.alpha(0.3f)) }
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(text = "Ajude Yumi a encontrar as Lanternas Brilhantes a tempo do evento Tooro Nagashi!", modifier = Modifier.padding(horizontal = 24.dp), textAlign = TextAlign.Center, fontSize = 14.sp, color = Color.DarkGray)
                         Spacer(modifier = Modifier.height(24.dp))
-                        Button(
-                            onClick = { showTrailDialog = false; onNavigateToTrailStart() },
-                            modifier = Modifier.fillMaxWidth(0.8f).height(56.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = RedPrimary),
-                            shape = RoundedCornerShape(28.dp)
-                        ) {
-                            Text("Jogar", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        }
+                        Button(onClick = { showTrailDialog = false; onNavigateToTrailStart() }, modifier = Modifier.fillMaxWidth(0.8f).height(56.dp), colors = ButtonDefaults.buttonColors(containerColor = RedPrimary), shape = RoundedCornerShape(28.dp)) { Text("Jogar", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp) }
                     }
                 }
             }

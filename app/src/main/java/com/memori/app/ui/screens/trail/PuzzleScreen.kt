@@ -4,7 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +29,9 @@ import androidx.compose.ui.unit.sp
 import com.memori.app.R
 import kotlinx.coroutines.delay
 import java.util.Collections
+import kotlin.math.abs
+
+enum class SwipeDirection { UP, DOWN, LEFT, RIGHT }
 
 @Composable
 fun PuzzleScreen(onPuzzleCompleted: (Int) -> Unit, onExit: () -> Unit) {
@@ -58,7 +62,7 @@ fun PuzzleScreen(onPuzzleCompleted: (Int) -> Unit, onExit: () -> Unit) {
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF9F9F9))) {
-        // Botão Sair
+        // Exit Button
         IconButton(
             onClick = onExit,
             modifier = Modifier
@@ -85,9 +89,9 @@ fun PuzzleScreen(onPuzzleCompleted: (Int) -> Unit, onExit: () -> Unit) {
                 color = MaterialTheme.colorScheme.primary
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // TIMER VOLTOU
+            // Timer
             Surface(
                 shape = RoundedCornerShape(50),
                 color = MaterialTheme.colorScheme.primaryContainer,
@@ -101,7 +105,7 @@ fun PuzzleScreen(onPuzzleCompleted: (Int) -> Unit, onExit: () -> Unit) {
                 )
             }
 
-            // Grade do Puzzle - Clique para mover habilitado para estabilidade
+            // Puzzle Grid - Swipe support
             Surface(
                 modifier = Modifier
                     .size(312.dp)
@@ -123,14 +127,15 @@ fun PuzzleScreen(onPuzzleCompleted: (Int) -> Unit, onExit: () -> Unit) {
                                         .weight(1f)
                                         .aspectRatio(1f)
                                         .padding(2.dp)
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .clickable {
+                                ) {
+                                    PuzzlePiece(
+                                        tileValue = tileValue,
+                                        onSwipe = { direction ->
                                             if (!puzzleFinished) {
-                                                tryMove(index, tiles)
+                                                handleSwipe(index, direction, tiles)
                                             }
                                         }
-                                ) {
-                                    PuzzlePiece(tileValue)
+                                    )
                                 }
                             }
                         }
@@ -138,14 +143,14 @@ fun PuzzleScreen(onPuzzleCompleted: (Int) -> Unit, onExit: () -> Unit) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             if (feedbackMessage.isNotEmpty()) {
                 Text(feedbackMessage, color = Color(0xFFFF5252), fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Botões de Ação
+            // Action Buttons
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -205,42 +210,75 @@ fun PuzzleScreen(onPuzzleCompleted: (Int) -> Unit, onExit: () -> Unit) {
 }
 
 @Composable
-fun PuzzlePiece(tileValue: Int) {
-    if (tileValue == 8) {
-        Box(modifier = Modifier.fillMaxSize().background(Color.LightGray.copy(alpha = 0.2f)))
-    } else {
-        val row = tileValue / 3
-        val col = tileValue % 3
+fun PuzzlePiece(tileValue: Int, onSwipe: (SwipeDirection) -> Unit) {
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    var offsetY by remember { mutableFloatStateOf(0f) }
 
-        BoxWithConstraints(modifier = Modifier.fillMaxSize().clipToBounds()) {
-            val w = maxWidth
-            val h = maxHeight
-            
-            Image(
-                painter = painterResource(id = R.drawable.kkkk_puzzle),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(w * 3, h * 3)
-                    .offset {
-                        IntOffset(
-                            x = -(w * col).roundToPx(),
-                            y = -(h * row).roundToPx()
-                        )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(4.dp))
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        offsetX += dragAmount.x
+                        offsetY += dragAmount.y
                     },
-                contentScale = ContentScale.FillBounds
-            )
+                    onDragEnd = {
+                        if (abs(offsetX) > 30f || abs(offsetY) > 30f) {
+                            val direction = if (abs(offsetX) > abs(offsetY)) {
+                                if (offsetX > 0) SwipeDirection.RIGHT else SwipeDirection.LEFT
+                            } else {
+                                if (offsetY > 0) SwipeDirection.DOWN else SwipeDirection.UP
+                            }
+                            onSwipe(direction)
+                        }
+                        offsetX = 0f
+                        offsetY = 0f
+                    }
+                )
+            }
+            .clipToBounds()
+    ) {
+        if (tileValue == 8) {
+            Box(modifier = Modifier.fillMaxSize().background(Color.LightGray.copy(alpha = 0.2f)))
+        } else {
+            val row = tileValue / 3
+            val col = tileValue % 3
+
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                val w = maxWidth
+                val h = maxHeight
+                
+                Image(
+                    painter = painterResource(id = R.drawable.kkkk_puzzle),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(w * 3, h * 3)
+                        .offset {
+                            IntOffset(
+                                x = -(w * col).roundToPx(),
+                                y = -(h * row).roundToPx()
+                            )
+                        },
+                    contentScale = ContentScale.FillBounds
+                )
+            }
         }
     }
 }
 
-fun tryMove(index: Int, tiles: MutableList<Int>) {
+fun handleSwipe(index: Int, direction: SwipeDirection, tiles: MutableList<Int>) {
     val emptyIndex = tiles.indexOf(8)
-    val row = index / 3
-    val col = index % 3
-    val eRow = emptyIndex / 3
-    val eCol = emptyIndex % 3
+    val targetIndex = when (direction) {
+        SwipeDirection.UP -> if (index >= 3) index - 3 else -1
+        SwipeDirection.DOWN -> if (index <= 5) index + 3 else -1
+        SwipeDirection.LEFT -> if (index % 3 != 0) index - 1 else -1
+        SwipeDirection.RIGHT -> if (index % 3 != 2) index + 1 else -1
+    }
 
-    if (Math.abs(row - eRow) + Math.abs(col - eCol) == 1) {
+    if (targetIndex != -1 && targetIndex == emptyIndex) {
         Collections.swap(tiles, index, emptyIndex)
     }
 }
